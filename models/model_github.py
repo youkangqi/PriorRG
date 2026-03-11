@@ -51,14 +51,15 @@ class Alignment(pl.LightningModule):
             "best_monitor_metric": -1.0,
         }
 
+        # Let Lightning/DDP place metrics on each rank's local device.
         self.train_loss_metric = {
-            'loss': torchmetrics.MeanMetric().to(args['device']),
+            'loss': torchmetrics.MeanMetric(),
         }
         self.val_loss_metric = {
-            'loss': torchmetrics.MeanMetric().to(args['device']),
+            'loss': torchmetrics.MeanMetric(),
         }
         self.test_loss_metric = {
-            'loss': torchmetrics.MeanMetric().to(args['device']),
+            'loss': torchmetrics.MeanMetric(),
         }
 
         # Image Encoder (frozen):
