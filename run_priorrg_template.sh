@@ -23,11 +23,13 @@ IMAGES_DIR="${IMAGES_DIR:-${PROJECT_ROOT}/MIMIC-CXR/files}"
 #STAGE2_CKPT="${STAGE2_CKPT:-/homeB/youkangqi/.cache/huggingface/hub/models--MK-runner--PriorRG/snapshots/34320325dffeb46217d18eca90b6bd5c0113aa99/checkpoints/mimic-cxr/report-generation-gpt2/checkpoint/best_model.ckpt}"
 
 # ========== Runtime ==========
-CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2}"
+CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-5,6,7}"
 NUM_GPUS="${NUM_GPUS:-3}"
 NUM_WORKERS="${NUM_WORKERS:-6}"
 SEED="${SEED:-9233}"
 VERSION="${VERSION:-repro}"
+# Helps reduce CUDA memory fragmentation.
+PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 
 # ========== Model/training hyper-params ==========
 MAX_LENGTH="${MAX_LENGTH:-100}"
@@ -36,9 +38,13 @@ TEMPORAL_FUSION_NUM_BLOCKS="${TEMPORAL_FUSION_NUM_BLOCKS:-3}"
 PERCEIVER_NUM_BLOCKS="${PERCEIVER_NUM_BLOCKS:-3}"
 NUM_LATENTS="${NUM_LATENTS:-128}"
 NUM_BEAMS="${NUM_BEAMS:-3}"
+STAGE1_BATCH_SIZE="${STAGE1_BATCH_SIZE:-24}"
+STAGE2_BATCH_SIZE="${STAGE2_BATCH_SIZE:-24}"
+STAGE1_EPOCHS="${STAGE1_EPOCHS:-10}"
+STAGE2_EPOCHS="${STAGE2_EPOCHS:-50}"
 
 stage1_train() {
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
     --data_name "mimic_cxr" \
     --version "${VERSION}" \
     --task "pretraining" \
@@ -58,12 +64,12 @@ stage1_train() {
     --num_latents "${NUM_LATENTS}" \
     --patience 10 \
     --pt_lr 5.0e-5 \
-    --epochs 10 \
-    --batch_size 32
+    --epochs "${STAGE1_EPOCHS}" \
+    --batch_size "${STAGE1_BATCH_SIZE}"
 }
 
 stage1_infer() {
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
     --data_name "mimic_cxr" \
     --version "${VERSION}" \
     --task "pretraining" \
@@ -84,12 +90,12 @@ stage1_infer() {
     --num_latents "${NUM_LATENTS}" \
     --patience 10 \
     --pt_lr 5.0e-5 \
-    --epochs 10 \
-    --batch_size 32
+    --epochs "${STAGE1_EPOCHS}" \
+    --batch_size "${STAGE1_BATCH_SIZE}"
 }
 
 stage2_train() {
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
     --data_name "mimic_cxr" \
     --version "${VERSION}" \
     --task "report-generation-gpt2" \
@@ -113,12 +119,12 @@ stage2_train() {
     --pt_lr 5.0e-6 \
     --ft_lr 5.0e-5 \
     --monitor_metric "RCB" \
-    --epochs 50 \
-    --batch_size 16
+    --epochs "${STAGE2_EPOCHS}" \
+    --batch_size "${STAGE2_BATCH_SIZE}"
 }
 
 stage2_infer() {
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_github.py" \
     --data_name "mimic_cxr" \
     --version "${VERSION}" \
     --task "report-generation-gpt2" \
@@ -142,12 +148,12 @@ stage2_infer() {
     --pt_lr 5.0e-6 \
     --ft_lr 5.0e-5 \
     --monitor_metric "RCB" \
-    --epochs 50 \
-    --batch_size 16
+    --epochs "${STAGE2_EPOCHS}" \
+    --batch_size "${STAGE2_BATCH_SIZE}"
 }
 
 single_sample_infer() {
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_single_sample_github.py" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES}" PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF}" "${PYTHON_BIN}" "${PROJECT_ROOT}/main_single_sample_github.py" \
     --task "report-generation-single-sample" \
     --phase "inference" \
     --ckpt_zoo_dir "${CKPT_ZOO_DIR}" \
