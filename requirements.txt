@@ -7,6 +7,7 @@ pycocoevalcap==1.2
 pytorch_lightning==2.3.0
 radgraph==0.0.9
 stanza==1.11.0
-torch==2.6.0
+#torch==2.6.0
 torchmetrics==1.4.0.post0
 transformers==4.43.3
+scikit-learn==1.7.2

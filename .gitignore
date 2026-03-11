@@ -1,4 +1,7 @@
-ckpt_zoo_dir/
-MIMIC_CXR/
-PriorRG/
+ckpt_zoo_dir
+MIMIC-CXR
+PriorRG
 *.pdf
+*__pycache__
+*logs
+.vscode
